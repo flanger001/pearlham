@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+echo "Adding configuration variables"
+source .env
+
+echo "Copying src to dist"
+rsync -av src/ dist --delete
+
+echo "Using profile $AWS_PROFILE"
+echo "Uploading to $AWS_BUCKET"
+aws s3 sync dist s3://$AWS_BUCKET/ --delete
