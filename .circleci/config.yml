@@ -1,0 +1,25 @@
+version: 2.1
+orbs:
+  aws-s3: circleci/aws-s3@3.0.0
+
+jobs:
+  deploy:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - run:
+          name: "Install rsync"
+          command: sudo apt update && sudo apt install -y rsync
+      - checkout
+      - run:
+          name: "Copy src/ to dist/"
+          command: "rsync -av src/ dist --delete"
+      - aws-s3/sync:
+          arguments: --delete
+          from: "dist/"
+          to: s3://$AWS_BUCKET/
+
+workflows:
+  deploy:
+    jobs:
+      - deploy
