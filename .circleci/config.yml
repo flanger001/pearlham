@@ -1,6 +1,7 @@
 version: 2.1
 orbs:
-  aws-s3: circleci/aws-s3@3.0.0
+  aws-cli: circleci/aws-cli@4.1.2
+  aws-s3: circleci/aws-s3@4.0.0
 
 jobs:
   deploy:
@@ -11,19 +12,26 @@ jobs:
           name: "Install rsync"
           command: sudo apt update && sudo apt install -y rsync
       - checkout
+      - aws-cli/setup:
+          role_arn: "${AWS_OIDC_ROLE_ARN}"
+          region: "${AWS_REGION}"
+          profile_name: "OIDC"
       - run:
           name: "Copy src/ to dist/"
           command: "rsync -av src/ dist --delete"
       - aws-s3/sync:
           arguments: --delete
           from: "dist/"
-          to: s3://$AWS_BUCKET/
+          to: "s3://${AWS_BUCKET}/"
+          profile_name: "OIDC"
 
 workflows:
   deploy:
     jobs:
       - deploy:
-        filters:
-          branches:
-            only:
-              - master
+          filters:
+            branches:
+              only:
+                - main
+          context:
+            - AWS
